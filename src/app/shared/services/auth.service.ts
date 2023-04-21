@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, filter, first, firstValueFrom, tap } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BehaviorSubject, filter, first, firstValueFrom, switchMap, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment.development';
 
@@ -13,7 +13,8 @@ export class AuthService {
 
   constructor(
     private route: ActivatedRoute,
-    private http: HttpClient
+    private http: HttpClient,
+    private router: Router
   ) {
     this.loadingSubject = new BehaviorSubject<boolean>(true);
   }
@@ -40,7 +41,7 @@ export class AuthService {
 
   async login(email: string, password: string) {
     this.loadingSubject.next(true);
-    let req = this.http.post(`${environment.apiUrl}/oauth2/password`, {
+    let req = this.http.post(`${environment.apiUrl}/oauth/password`, {
       email,
       password
     })
@@ -55,7 +56,7 @@ export class AuthService {
 
   async signup(nameFirst: string, nameLast: string, email: string, password: string) {
     this.loadingSubject.next(true);
-    let req = this.http.post(`${environment.apiUrl}/users`, {
+    let req = this.http.post(`${environment.apiUrl}/users/signup`, {
       nameFirst,
       nameLast,
       email,
@@ -66,6 +67,23 @@ export class AuthService {
     })
     let res = await firstValueFrom(req)
     console.log('user', res)
+  }
+
+  handleVerifyEmailCallback() {
+    let nonce: string;
+    this.loadingSubject.next(true);
+    this.route.queryParamMap.pipe(
+      tap(qs => nonce = qs.get('state') || ''),
+      filter(qs => !!qs.get('code')),
+      first(),
+      switchMap(qs => this.http.get(`${environment.apiUrl}/oauth/activate?code=${qs.get('code')}`))
+    ).subscribe(
+      res => {
+        console.log(res)
+        this.loadingSubject.next(false)
+        this.router.navigate([])
+      }
+    )
   }
 
 }

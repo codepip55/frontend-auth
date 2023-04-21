@@ -15,5 +15,9 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     this.authService.handleCallback()
+
+    if (window.location.pathname === '/verify') {
+      this.authService.handleVerifyEmailCallback()
+    }
   }
 }

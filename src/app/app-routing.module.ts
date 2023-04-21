@@ -8,6 +8,7 @@ const routes: Routes = [
   { path: '', component: HomeComponent, children: [
     { path: 'login', component: LoginComponent },
     { path: 'signup', component: SignupComponent },
+    { path: 'verify', component: LoginComponent },
     { path: '**', redirectTo: 'login' }
   ] }
 ];
